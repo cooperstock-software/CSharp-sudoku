@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- .NET 8 (LTS) opens in Visual Studio 2022 17.8+ and Visual Studio 2026.
+         To move to a newer runtime, just change this to e.g. net10.0-windows. -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>SudokuProject</RootNamespace>
+    <AssemblyName>SudokuProject</AssemblyName>
+    <Product>Sudoku</Product>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <ApplicationIcon>SudokuProject.ico</ApplicationIcon>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Version>1.0.0.0</Version>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The Help button opens sudoku.pdf from the current directory, so ship it next to the .exe. -->
+    <None Update="sudoku.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Nest the designer / resource files under their forms in Solution Explorer. -->
+  <ItemGroup>
+    <Compile Update="Cell.Designer.cs">
+      <DependentUpon>Cell.cs</DependentUpon>
+    </Compile>
+    <Compile Update="SudokuBaseForm.Designer.cs">
+      <DependentUpon>SudokuBaseForm.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Sudoku6x6Form.Designer.cs">
+      <DependentUpon>Sudoku6x6Form.cs</DependentUpon>
+    </Compile>
+    <Compile Update="OptionsForm.Designer.cs">
+      <DependentUpon>OptionsForm.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="Cell.resx">
+      <DependentUpon>Cell.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="SudokuBaseForm.resx">
+      <DependentUpon>SudokuBaseForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Sudoku6x6Form.resx">
+      <DependentUpon>Sudoku6x6Form.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="OptionsForm.resx">
+      <DependentUpon>OptionsForm.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>
