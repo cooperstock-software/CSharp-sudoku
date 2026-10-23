@@ -3,7 +3,7 @@ using System.Windows.Forms;
 namespace SudokuProject
 {
     /// <summary>
-    /// The fast recursive backtracking solver (Delphi: TBacktrack in Backtrack.pas).
+    /// The fast recursive backtracking solver.
     /// </summary>
     /// <remarks>
     /// rowMasks[i] is a bitmask, with information about row number i, with the j-th right-most
@@ -15,15 +15,15 @@ namespace SudokuProject
     ///    tested with (maskValue & bit(digit)) == 0, which returns true if the appropriate digit is a 0,
     ///    set to mark them as being already present with maskValue |= bit(digit), or
     ///    cleared to mark them as not already present with maskValue &= ~bit(digit).
-    /// Arrays are 1-based like the Delphi source (index 0 is unused).
+    /// Arrays are 0-based unlike the Delphi source it was converted from.
     /// </remarks>
     internal sealed class Backtrack: BacktrackBase
     {
-        private readonly uint[] rowMasks = new uint[10];
-        private readonly uint[] colMasks = new uint[10];
-        private readonly uint[] boxMasks = new uint[10];
+        private readonly uint[] rowMasks = new uint[9];
+        private readonly uint[] colMasks = new uint[9];
+        private readonly uint[] boxMasks = new uint[9];
 
-        private readonly int[,] board = new int[10, 10];
+        private readonly int[,] board = new int[9, 9];
 
         public override bool DoAll()
         {
@@ -45,9 +45,9 @@ namespace SudokuProject
         // Set up the initial Board array of current values, 0 for no value.
         private void SetupBoard()
         {
-            for (int row = 1; row <= numRowsCols; row++)
+            for (int row = 0; row < numRowsCols; row++)
             {
-                for (int col = 1; col <= numRowsCols; col++)
+                for (int col = 0; col < numRowsCols; col++)
                 {
                     board[row, col] = 0;
                     Cell cell = pCells[row, col];
@@ -64,22 +64,22 @@ namespace SudokuProject
         // Initialize masks from the starting board
         private void InitMasks()
         {
-            for (int row = 1; row <= numRowsCols; row++)
+            for (int row = 0; row < numRowsCols; row++)
             {
                 rowMasks[row] = 0;
                 colMasks[row] = 0;
                 boxMasks[row] = 0;
             }
 
-            for (int row = 1; row <= numRowsCols; row++)
+            for (int row = 0; row < numRowsCols; row++)
             {
-                for (int col = 1; col <= numRowsCols; col++)
+                for (int col = 0; col < numRowsCols; col++)
                 {
                     int digit = board[row, col];
                     if (digit > 0)
                     {
                         int box = pCells[row, col].BoxNum;
-                        uint b = bit(digit);
+                        uint b = Bit(digit);
                         rowMasks[row] |= b;
                         colMasks[col] |= b;
                         boxMasks[box] |= b;
@@ -100,7 +100,7 @@ namespace SudokuProject
 
             for (int digit = 1; digit <= numRowsCols; digit++)
             {
-                uint b = bit(digit);
+                uint b = Bit(digit);
 
                 if ((rowMasks[row] & b) == 0 &&
                     (colMasks[col] & b) == 0 &&
@@ -142,9 +142,9 @@ namespace SudokuProject
         // Return true if there is one, false if not.
         private bool FindEmpty(out int foundRow, out int foundCol)
         {
-            for (int row = 1; row <= numRowsCols; row++)
+            for (int row = 0; row < numRowsCols; row++)
             {
-                for (int col = 1; col <= numRowsCols; col++)
+                for (int col = 0; col < numRowsCols; col++)
                 {
                     if (board[row, col] == 0)
                     {
@@ -163,9 +163,9 @@ namespace SudokuProject
         // Transfer results back to our UI from the solved board.
         private void TransferBack()
         {
-            for (int row = 1; row <= numRowsCols; row++)
+            for (int row = 0; row < numRowsCols; row++)
             {
-                for (int col = 1; col <= numRowsCols; col++)
+                for (int col = 0; col < numRowsCols; col++)
                 {
                     Cell cell = pCells[row, col];
                     if (!cell.IsResultVisible)
@@ -175,6 +175,6 @@ namespace SudokuProject
         }
 
         // Return a bit mask with the bit for the given digit set.
-        private uint bit(int d) => 1u << (d - 1);
+        private static uint Bit(int d) => 1u << (d - 1);
     }
 }

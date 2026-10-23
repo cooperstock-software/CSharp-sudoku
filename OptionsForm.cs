@@ -4,7 +4,7 @@ using System.Windows.Forms;
 namespace SudokuProject
 {
     /// <summary>
-    /// The Options dialog (Delphi: TOptionsForm in Options.pas / Options.dfm).
+    /// The Options dialog.
     /// Controls and event wiring live in OptionsForm.Designer.cs.
     /// </summary>
     public partial class OptionsForm : Form
@@ -35,7 +35,7 @@ namespace SudokuProject
 
         private RadioButton[] MethodRadioButtons
         {
-            get { return new[] { MethodRadioButton1, MethodRadioButton2, MethodRadioButton3 }; }
+            get { return [MethodRadioButton1, MethodRadioButton2, MethodRadioButton3]; }
         }
 
         // Initialize the controls from our globals
@@ -63,13 +63,13 @@ namespace SudokuProject
 
             Globals.WriteIni();
 
-            DialogResult = DialogResult.OK;   // Delphi: ModalResult := mrOk
+            DialogResult = DialogResult.OK;
         }
 
         // Just cancel without saving
         private void CancelButtonClick(object sender, EventArgs e)
         {
-            DialogResult = DialogResult.Cancel;   // Delphi: ModalResult := mrCancel
+            DialogResult = DialogResult.Cancel;
         }
     }
 }

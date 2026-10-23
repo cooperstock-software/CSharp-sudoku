@@ -10,13 +10,12 @@ using System.Windows.Forms;
 namespace SudokuProject
 {
     /// <summary>
-    /// The 9x9 Sudoku window (Delphi: TSudokuBaseForm in SudokuBase.pas / SudokuBase.dfm).
-    /// The 6x6 window (Sudoku6x6Form) inherits from this one, as it did in Delphi.
+    /// The 9x9 Sudoku window.
+    /// The 6x6 window (Sudoku6x6Form) inherits from this one.
     /// Controls and event wiring live in SudokuBaseForm.Designer.cs.
     /// </summary>
     /// <remarks>
-    /// Arrays are 1-based like the Delphi source (index 0 is unused), which keeps the row / column /
-    /// box arithmetic identical to the original.
+    /// Arrays are 0-based unlike the Delphi source it was converted from.
     /// </remarks>
     public partial class SudokuBaseForm : Form
     {
@@ -24,13 +23,13 @@ namespace SudokuProject
 
         protected string saveFile;                // last loaded file, for the Save / Load dialogs
 
-        // Public state (Delphi: public fields). These are fields, not properties, so the Windows
+        // Public state. These are fields, not properties, so the Windows
         // Forms designer never tries to serialize them.
-        public int ClickedRow, ClickedCol;        // the highlighted square, 0 if none
+        public int ClickedRow = -1, ClickedCol = -1;        // the highlighted square, -1 if none
         public long PausesDuration;               // milliseconds spent paused / waiting for the user
-        public Cell[,] Cells = new Cell[10, 10];      // [row, col]
-        public Cell[,] Columns = new Cell[10, 10];    // [col, row]
-        public Cell[,] Boxes = new Cell[10, 10];      // [boxNum, position within box]
+        public Cell[,] Cells = new Cell[9, 9];      // [row, col]
+        public Cell[,] Columns = new Cell[9, 9];    // [col, row]
+        public Cell[,] Boxes = new Cell[9, 9];      // [boxNum, position within box]
         public bool IsStarted, Stepping;
         public int NumRowsCols;                   // 9 or 6, for the different puzzle sizes
 
@@ -43,8 +42,7 @@ namespace SudokuProject
         // Creation
         // ------------------------------------------------------------------------------------
 
-        // Delphi OnCreate handler. The 6x6 form replaces it (see Sudoku6x6Form.FormCreate), exactly
-        // as its .dfm replaced the inherited OnCreate with FormCreate6x6.
+        // Form create handler. The 6x6 form replaces it (see Sudoku6x6Form.FormCreate).
         protected virtual void FormCreate(object sender, EventArgs e)
         {
             NumRowsCols = 9;
@@ -65,9 +63,9 @@ namespace SudokuProject
 
             CurrentDir = Directory.GetCurrentDirectory();
 
-            for (int row = 1; row <= NumRowsCols; row++)
+            for (int row = 0; row < NumRowsCols; row++)
             {
-                for (int col = 1; col <= NumRowsCols; col++)
+                for (int col = 0; col < NumRowsCols; col++)
                 {
                     RowColToBox(row, col, out int boxNum, out int boxPos);
                     Cell cell = new(this, row, col, boxNum);
@@ -99,7 +97,7 @@ namespace SudokuProject
             int digit = int.Parse(key);
 
             // check in this row
-            for (int i = 1; i <= NumRowsCols; i++)
+            for (int i = 0; i < NumRowsCols; i++)
             {
                 Cell cell = Cells[row, i];
                 if (i != col)
@@ -107,7 +105,7 @@ namespace SudokuProject
             }
 
             // check in this column
-            for (int i = 1; i <= NumRowsCols; i++)
+            for (int i = 0; i < NumRowsCols; i++)
             {
                 Cell cell = Cells[i, col];
                 if (i != row)
@@ -116,7 +114,7 @@ namespace SudokuProject
 
             // check in this 3x3 or 2x3 box
             int boxNum = Cells[row, col].BoxNum;
-            for (int i = 1; i <= NumRowsCols; i++)
+            for (int i = 0; i < NumRowsCols; i++)
             {
                 Cell cell = Boxes[boxNum, i];
                 if (cell.Row != row && cell.Col != col)
@@ -134,7 +132,7 @@ namespace SudokuProject
                 return true;
 
             // check in this row
-            for (int i = 1; i <= NumRowsCols; i++)
+            for (int i = 0; i < NumRowsCols; i++)
             {
                 Cell cell = Cells[row, i];
                 if (i != col && cell.IsResultVisible && cell.ResultText() == key)
@@ -148,7 +146,7 @@ namespace SudokuProject
             }
 
             // check in this column
-            for (int i = 1; i <= NumRowsCols; i++)
+            for (int i = 0; i < NumRowsCols; i++)
             {
                 Cell cell = Cells[i, col];
                 if (i != row && cell.IsResultVisible && cell.ResultText() == key)
@@ -163,7 +161,7 @@ namespace SudokuProject
 
             // check in this 3x3 or 3x2 box
             int boxNum = Cells[row, col].BoxNum;
-            for (int i = 1; i <= NumRowsCols; i++)
+            for (int i = 0; i < NumRowsCols; i++)
             {
                 Cell cell = Boxes[boxNum, i];
                 if (cell.Row != row && cell.Col != col && cell.IsResultVisible &&
@@ -184,7 +182,7 @@ namespace SudokuProject
         // Clear the selected colour in whichever square (if any) is currently highlighted
         public void ClearSelection()
         {
-            if (ClickedRow > 0 && ClickedCol > 0)
+            if (ClickedRow >= 0 && ClickedCol >= 0)
                 Cells[ClickedRow, ClickedCol].ResetColor();
         }
 
@@ -192,13 +190,12 @@ namespace SudokuProject
         // Keyboard
         // ------------------------------------------------------------------------------------
 
-        // Delphi handled navigation keys in the form's OnShortCut event, because normal controls on
-        // the form like buttons were swallowing and acting on keys like Tab. The Windows Forms
-        // equivalent is ProcessCmdKey, which sees the key before any control does.
+        // This sees keys before any control does, so it can process them, because normal controls on
+        // the form like buttons otherwise swallow and act on keys like Tab.
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             if (FormShortCut(keyData))
-                return true;   // Delphi: Handled := True
+                return true; // this says the key has been handled
 
             return base.ProcessCmdKey(ref msg, keyData);
         }
@@ -209,16 +206,16 @@ namespace SudokuProject
             Keys c = keyData & Keys.KeyCode;
             bool shifted = (keyData & Keys.Shift) == Keys.Shift;
 
-            if (c != Keys.Tab && c != Keys.Down && c != Keys.Up && c != Keys.Right && c != Keys.Left &&
-                c != Keys.PageDown && c != Keys.PageUp && c != Keys.End && c != Keys.Home &&
-                c != Keys.Delete)
+            if (c is not 
+                (Keys.Tab or Keys.Down or Keys.Up or Keys.Right or Keys.Left or
+                 Keys.PageDown or Keys.PageUp or Keys.Home or Keys.End or Keys.Delete))
                 return false;
 
-            // The Delphi code indexed the cells array with row 0 / column 0 if nothing had been
-            // clicked yet (undefined behaviour); here the first key press just selects square 1,1.
-            if (ClickedRow < 1 || ClickedCol < 1)
+            // the first key press just selects square 0,0.
+            if (ClickedRow < 0 || ClickedCol < 0)
             {
-                Cells[1, 1].FrameClick(this, EventArgs.Empty);
+                if (c != Keys.Delete)
+                    Cells[0, 0].FrameClick(this, EventArgs.Empty);
                 return true;
             }
 
@@ -229,8 +226,6 @@ namespace SudokuProject
             {
                 // Delete: same as backspace, clear the result in the square
                 case Keys.Delete:
-                    if (ClickedRow < 1 || ClickedCol < 1) return true;   // nothing selected
-
                     Cell cell = Cells[ClickedRow, ClickedCol];
                     if (IsStarted)
                     {
@@ -247,23 +242,23 @@ namespace SudokuProject
                     if (!shifted)
                     {
                         newCol++;
-                        if (newCol > NumRowsCols)
+                        if (newCol >= NumRowsCols)
                         {
-                            newCol = 1;
+                            newCol = 0;
                             newRow++;
-                            if (newRow > NumRowsCols)
-                                newRow = 1;
+                            if (newRow >= NumRowsCols)
+                                newRow = 0;
                         }
                     }
                     else
                     {
                         newCol--;
-                        if (newCol < 1)
+                        if (newCol < 0)
                         {
-                            newCol = NumRowsCols;
+                            newCol = NumRowsCols - 1;
                             newRow--;
-                            if (newRow < 1)
-                                newRow = NumRowsCols;
+                            if (newRow < 0)
+                                newRow = NumRowsCols - 1;
                         }
                     }
                     Cells[newRow, newCol].FrameClick(this, EventArgs.Empty);
@@ -271,7 +266,7 @@ namespace SudokuProject
 
                 // Arrow keys move in expected directions but don't wrap
                 case Keys.Down:
-                    if (newRow < NumRowsCols)
+                    if (newRow < NumRowsCols - 1)
                     {
                         newRow++;
                         Cells[newRow, newCol].FrameClick(this, EventArgs.Empty);
@@ -281,7 +276,7 @@ namespace SudokuProject
                     return true;
 
                 case Keys.Up:
-                    if (newRow > 1)
+                    if (newRow > 0)
                     {
                         newRow--;
                         Cells[newRow, newCol].FrameClick(this, EventArgs.Empty);
@@ -291,7 +286,7 @@ namespace SudokuProject
                     return true;
 
                 case Keys.Right:
-                    if (newCol < NumRowsCols)
+                    if (newCol < NumRowsCols - 1)
                     {
                         newCol++;
                         Cells[newRow, newCol].FrameClick(this, EventArgs.Empty);
@@ -301,7 +296,7 @@ namespace SudokuProject
                     return true;
 
                 case Keys.Left:
-                    if (newCol > 1)
+                    if (newCol > 0)
                     {
                         newCol--;
                         Cells[newRow, newCol].FrameClick(this, EventArgs.Empty);
@@ -312,23 +307,23 @@ namespace SudokuProject
 
                 // PgUp/PgDn go to top or bottom
                 case Keys.PageDown:
-                    newRow = NumRowsCols;
+                    newRow = NumRowsCols - 1;
                     Cells[newRow, newCol].FrameClick(this, EventArgs.Empty);
                     return true;
 
                 case Keys.PageUp:
-                    newRow = 1;
+                    newRow = 0;
                     Cells[newRow, newCol].FrameClick(this, EventArgs.Empty);
                     return true;
 
                 // Home/End go to start or end of line
                 case Keys.End:
-                    newCol = NumRowsCols;
+                    newCol = NumRowsCols - 1;
                     Cells[newRow, newCol].FrameClick(this, EventArgs.Empty);
                     return true;
 
                 case Keys.Home:
-                    newCol = 1;
+                    newCol = 0;
                     Cells[newRow, newCol].FrameClick(this, EventArgs.Empty);
                     return true;
             }
@@ -348,7 +343,7 @@ namespace SudokuProject
         {
             char key = e.KeyChar;
 
-            if (ClickedRow == 0 || ClickedCol == 0) return;
+            if (ClickedRow < 0 || ClickedCol < 0) return;
 
             Cell cell = Cells[ClickedRow, ClickedCol];
 
@@ -386,7 +381,7 @@ namespace SudokuProject
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            Cursor.Current = Cursors.WaitCursor;   // Delphi: Screen.Cursor := crHourGlass
+            Cursor.Current = Cursors.WaitCursor;
             Application.UseWaitCursor = true;
             try
             {
@@ -507,9 +502,9 @@ namespace SudokuProject
         // them or already have the 1-NumRowsCols digits in them
         private void ManualPlayButtonClick(object sender, EventArgs e)
         {
-            for (int row = 1; row <= NumRowsCols; row++)
+            for (int row = 0; row < NumRowsCols; row++)
             {
-                for (int col = 1; col <= NumRowsCols; col++)
+                for (int col = 0; col < NumRowsCols; col++)
                 {
                     Cell cell = Cells[row, col];
                     if (!(cell.IsResultVisible || cell.AreDigitsVisible))
@@ -546,29 +541,29 @@ namespace SudokuProject
         // Reset the colours on all squares to the standard white or silver
         private void ResetBackColors()
         {
-            for (int row = 1; row <= NumRowsCols; row++)
-                for (int col = 1; col <= NumRowsCols; col++)
+            for (int row = 0; row < NumRowsCols; row++)
+                for (int col = 0; col < NumRowsCols; col++)
                     Cells[row, col].ResetColor();
         }
 
-        // Convert a row and column number to a box number and box position - both values 1 to NumRowsCols.
+        // Convert a row and column number to a box number and box position - both values 0 to NumRowsCols - 1.
         // Rules for this a 9x9 Sudoku:
-        //    Box number 1 is the top-left 9 squares, box 2 is the top-centre 9,
-        //    box 3 is the top-right 9, box 4 is the middle-left 9, etc.
-        // Box position is the sequential position 1-NumRowsCols within the box.
+        //    Box number 0 is the top-left 9 squares, box 1 is the top-centre 9,
+        //    box 2 is the top-right 9, box 3 is the middle-left 9, etc.
+        // Box position is the sequential position 0 to NumRowsCols - 1 within the box.
         protected virtual void RowColToBox(int row, int col, out int boxNum, out int boxPos)
         {
             // first calc the box number from two parts
-            int rowPart = (row + 2) / 3;   // gives 1, 2 or 3 for top 3 rows, centre 3 rows, and bottom 3 rows respectively
-            int colPart = (col + 2) / 3;   // gives 1, 2 or 3 for left 3 columns, middle 3 columns, or right 3 columns respectively
+            int rowPart = row / 3;   // gives 0, 1 or 2 for top 3 rows, centre 3 rows, and bottom 3 rows respectively
+            int colPart = col / 3;   // gives 0, 1 or 2 for left 3 columns, centre 3 columns and right 3 columns respectively
 
-            boxNum = (rowPart - 1) * 3 + colPart;
+            boxNum = rowPart * 3 + colPart;
 
             // now calc the position within the box from two parts
-            rowPart = (((row - 1) % 3) + 1) * 3 - 2;   // gives 1 for rows 1, 4 and 7, 4 for rows 2, 5 and 8, and 7 for rows 3, 6 and 9
-            colPart = ((col - 1) % 3) + 1;             // gives 1 for columns 1, 4 and 7, 2 for cols 2, 5 and 8, and 3 for cols 3, 6 and 9
+            rowPart = (row % 3) * 3; // gives 0 for rows 0,3,6, 3 for rows 1,4,7, and 6 for rows 2,5,8
+            colPart = col % 3; // gives 0 for columns 0,3,6, 1 for cols 1,4,7, and 2 for cols 2,5,8
 
-            boxPos = rowPart + (colPart - 1);
+            boxPos = rowPart + colPart;
         }
 
         // Follow a bunch of steps to solve the puzzle
@@ -591,7 +586,7 @@ namespace SudokuProject
             int numOccurrences = 0;
             int occurrenceIndex = 0;
 
-            for (int secondIndex = 1; secondIndex <= NumRowsCols; secondIndex++)
+            for (int secondIndex = 0; secondIndex < NumRowsCols; secondIndex++)
             {
                 Cell cell = anArray[firstIndex, secondIndex];
                 if (!cell.AreDigitsVisible) continue;
@@ -632,7 +627,6 @@ namespace SudokuProject
         // row/col/box that only occurs once, and solve it.
         // Return whether any were solved.
         // Set stop to true if you are stepping, you give progress message, and they ask to stop.
-        // (The Delphi version also had an unused nonePossible parameter, which is dropped here.)
         private bool SolveRowsColsBoxes(out bool stop)
         {
             string[] typeNames = [null, "row", "column", "box"];
@@ -645,17 +639,17 @@ namespace SudokuProject
             {
                 ArrayType aType = (ArrayType)t;
                 Cell[,] myCells = GetArrayOfType(aType);
-                for (int firstIndex = 1; firstIndex <= NumRowsCols; firstIndex++)
+                for (int firstIndex = 0; firstIndex < NumRowsCols; firstIndex++)
                 {
-                    for (int i = 1; i <= NumRowsCols; i++)
-                        if (SolveRowColBox(myCells, firstIndex, i))
+                    for (int digit = 1; digit <= NumRowsCols; digit++)
+                        if (SolveRowColBox(myCells, firstIndex, digit))
                             solvedAny = true;
 
                     if (!IsPuzzleSolved() && Stepping)
                     {
                         if (!Dialogs.Confirm("Did step to solve any squares where one digit was only " +
                                 "possible in one square of " + typeNames[t] + " " +
-                                firstIndex + extraText[t] +
+                                (firstIndex + 1) + extraText[t] +
                                 ".\n\nContinue stepping?"))
                         {
                             stop = true;
@@ -678,22 +672,22 @@ namespace SudokuProject
             nonePossible = false;
             bool solvedOne = false;
 
-            for (int row = 1; row <= NumRowsCols; row++)
+            for (int row = 0; row < NumRowsCols; row++)
             {
-                for (int col = 1; col <= NumRowsCols; col++)
+                for (int col = 0; col < NumRowsCols; col++)
                 {
                     Cell cell = Cells[row, col];
                     if (!cell.AreDigitsVisible) continue;
 
                     int numVisible = 0;
                     int visibleOne = 0;
-                    for (int i = 1; i <= NumRowsCols; i++)
+                    for (int digit = 1; digit <= NumRowsCols; digit++)
                     {
-                        if (cell.IsPossible(i))
+                        if (cell.IsPossible(digit))
                         {
                             numVisible++;
                             if (numVisible > 1) break;
-                            visibleOne = i;
+                            visibleOne = digit;
                         }
                     }
 
@@ -745,9 +739,9 @@ namespace SudokuProject
         // Return true if no squares of the puzzle have anything in them (it's "clear"), false otherwise.
         private bool IsPuzzleClear()
         {
-            for (int row = 1; row <= NumRowsCols; row++)
+            for (int row = 0; row < NumRowsCols; row++)
             {
-                for (int col = 1; col <= NumRowsCols; col++)
+                for (int col = 0; col < NumRowsCols; col++)
                 {
                     if (Cells[row, col].IsResultVisible)
                         return false;
@@ -760,9 +754,9 @@ namespace SudokuProject
         // Return whether or not the puzzle is solved
         public bool IsPuzzleSolved()
         {
-            for (int row = 1; row <= NumRowsCols; row++)
+            for (int row = 0; row < NumRowsCols; row++)
             {
-                for (int col = 1; col <= NumRowsCols; col++)
+                for (int col = 0; col < NumRowsCols; col++)
                 {
                     Cell cell = Cells[row, col];
                     if (!(cell.IsResultVisible && cell.ResultText().Length > 0))
@@ -813,10 +807,10 @@ namespace SudokuProject
             string borderLine = "+" + string.Concat(Enumerable.Repeat("---+", NumRowsCols));
             StringBuilder s = new();
 
-            for (int row = 1; row <= NumRowsCols; row++)
+            for (int row = 0; row < NumRowsCols; row++)
             {
                 s.Append(borderLine).Append('\n');
-                for (int col = 1; col <= NumRowsCols; col++)
+                for (int col = 0; col < NumRowsCols; col++)
                     s.Append(vertical).Append(Cells[row, col].SaveValue());
                 s.Append(vertical).Append('\n');
             }
@@ -903,7 +897,7 @@ namespace SudokuProject
                     lineNo++;
                     if (lineNo % 2 == 1) continue;   // skip alternate (border) lines
 
-                    int row = lineNo / 2;
+                    int row = lineNo / 2 - 1;
 
                     // Check it is for the right size puzzle - line lengths seem to be either
                     // 4 x NumRowsCols, or one higher
@@ -924,9 +918,9 @@ namespace SudokuProject
                     }
 
                     // parse the line and fill in the results
-                    for (int col = 1; col <= NumRowsCols; col++)
+                    for (int col = 0; col < NumRowsCols; col++)
                     {
-                        string s = line.Substring(col * 4 - 3, 3);
+                        string s = line.Substring(col * 4 + 1, 3);
                         char digit = s[1];
                         if (digit == ' ') continue;   // nothing in this square
                         bool isOriginal = s[0] != ' ';
@@ -949,13 +943,13 @@ namespace SudokuProject
 
         private void ClearAll()
         {
-            for (int row = 1; row <= NumRowsCols; row++)
-                for (int col = 1; col <= NumRowsCols; col++)
+            for (int row = 0; row < NumRowsCols; row++)
+                for (int col = 0; col < NumRowsCols; col++)
                     Cells[row, col].ClearAll();
 
             ResetBackColors();
-            ClickedRow = 0;
-            ClickedCol = 0;
+            ClickedRow = -1;
+            ClickedCol = -1;
 
             //ManualPlayButton.Enabled = false;
             //SolveButton.Enabled = false;
@@ -1006,9 +1000,9 @@ namespace SudokuProject
         private void PrepareForSolve()
         {
             // First reset all squares with digits in them (or that are empty)
-            for (int row = 1; row <= NumRowsCols; row++)
+            for (int row = 0; row < NumRowsCols; row++)
             {
-                for (int col = 1; col <= NumRowsCols; col++)
+                for (int col = 0; col < NumRowsCols; col++)
                 {
                     Cell cell = Cells[row, col];
                     if (!(cell.IsResultVisible && cell.ResultText().Length > 0))
@@ -1020,9 +1014,9 @@ namespace SudokuProject
             }
 
             // Now bubble out all values in squares with results
-            for (int row = 1; row <= NumRowsCols; row++)
+            for (int row = 0; row < NumRowsCols; row++)
             {
-                for (int col = 1; col <= NumRowsCols; col++)
+                for (int col = 0; col < NumRowsCols; col++)
                 {
                     Cell cell = Cells[row, col];
                     if (cell.IsResultVisible && cell.ResultText().Length > 0)

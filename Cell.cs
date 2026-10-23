@@ -7,17 +7,17 @@ using System.Windows.Forms;
 namespace SudokuProject
 {
     /// <summary>
-    /// One square of the puzzle (Delphi: TCell, a TFrame in cell.pas / cell.dfm).
+    /// One square of the puzzle.
     /// It holds the nine (or six) small "possible digit" labels plus one large result label;
     /// only one of the two groups is visible at a time.
     /// The controls and their event wiring live in Cell.Designer.cs.
     /// </summary>
     public partial class Cell : UserControl
     {
-        // Left position of each column, and Top position of each row, in the 9x9 puzzle (1-based).
-        private static readonly int[] Positions = { 0, 10, 76, 142, 209, 275, 341, 408, 474, 540 };
-        // Top position of each row in the 6x6 puzzle (1-based).
-        private static readonly int[] YPositions6x6 = { 0, 10, 76, 143, 209, 276, 342 };
+        // Left position of each column, and Top position of each row, in the 9x9 puzzle
+        private static readonly int[] Positions = [ 10, 76, 142, 209, 275, 341, 408, 474, 540 ];
+        // Top position of each row in the 6x6 puzzle
+        private static readonly int[] YPositions6x6 = [ 10, 76, 143, 209, 276, 342 ];
 
         // Values for the changeOther 2nd arg to the Change* functions
         private const bool ChangeOther = true;
@@ -27,18 +27,18 @@ namespace SudokuProject
         // italic), and original puzzle digits from solved ones the same way (bold vs regular).
         // Shared font objects keep that cheap: the solver changes these thousands of times.
         private static readonly Font DigitPossibleFont =
-            new Font("Tahoma", 17F, FontStyle.Bold, GraphicsUnit.Pixel, 0);
+            new("Tahoma", 17F, FontStyle.Bold, GraphicsUnit.Pixel, 0);
         private static readonly Font DigitImpossibleFont =
-            new Font("Tahoma", 17F, FontStyle.Italic, GraphicsUnit.Pixel, 0);
+            new("Tahoma", 17F, FontStyle.Italic, GraphicsUnit.Pixel, 0);
         private static readonly Font ResultOriginalFont =
-            new Font("Tahoma", 37F, FontStyle.Bold, GraphicsUnit.Pixel, 0);
+            new("Tahoma", 37F, FontStyle.Bold, GraphicsUnit.Pixel, 0);
         private static readonly Font ResultSolvedFont =
-            new Font("Tahoma", 37F, FontStyle.Regular, GraphicsUnit.Pixel, 0);
+            new("Tahoma", 37F, FontStyle.Regular, GraphicsUnit.Pixel, 0);
 
         // clMoneyGreen ("Mint") - the highlight colour of the selected square.
         private static readonly Color SelectedColor = Color.FromArgb(0xC0, 0xDC, 0xC0);
 
-        private readonly Label[] digits = new Label[10];   // 1-based: digits[1] is Label1
+        private readonly Label[] digits = new Label[9];   // digits[0] is Label1
         private readonly int numRowsCols;                  // 9 or 6, for the different puzzle sizes
 
         [Browsable(false)] public bool IsResultVisible { get; private set; }
@@ -62,8 +62,8 @@ namespace SudokuProject
             BoxNum = boxNum;
             Name = "Cell" + row + col;
 
-            owner.Controls.Add(this);   // Delphi: Parent := AOwner
-            BringToFront();             // sit above the black background panel (Shape1)
+            owner.Controls.Add(this);
+            BringToFront(); // sit above the black background panel (Shape1)
 
             numRowsCols = owner.NumRowsCols;
 
@@ -86,21 +86,21 @@ namespace SudokuProject
             ResetColor();
 
             // Make the array of the numRowsCols small digit controls, for easy indexed access
-            digits[1] = Label1;
-            digits[2] = Label2;
-            digits[3] = Label3;
-            digits[4] = Label4;
-            digits[5] = Label5;
-            digits[6] = Label6;
+            digits[0] = Label1;
+            digits[1] = Label2;
+            digits[2] = Label3;
+            digits[3] = Label4;
+            digits[4] = Label5;
+            digits[5] = Label6;
 
             if (numRowsCols == 9)
             {
-                digits[7] = Label7;
-                digits[8] = Label8;
-                digits[9] = Label9;
+                digits[6] = Label7;
+                digits[7] = Label8;
+                digits[8] = Label9;
             }
 
-            for (int i = 1; i <= numRowsCols; i++)
+            for (int i = 0; i < numRowsCols; i++)
             {
                 digits[i].Tag = 1;   // 1 means possible, 0 means not possible - start assume possible
                 digits[i].Visible = false;
@@ -108,7 +108,7 @@ namespace SudokuProject
             Result.Visible = false;
         }
 
-        // The form this square sits on (Delphi: Parent as TSudokuBaseForm).
+        // The form this square sits on.
         private SudokuBaseForm GameForm
         {
             get { return (SudokuBaseForm)Parent; }
@@ -120,7 +120,7 @@ namespace SudokuProject
         {
             if (Globals.ShowSmallDigits)
             {
-                for (int i = 1; i <= numRowsCols; i++)
+                for (int i = 0; i < numRowsCols; i++)
                     digits[i].Visible = isVisible;
             }
 
@@ -156,8 +156,8 @@ namespace SudokuProject
             if (AreDigitsVisible) ChangeDigitsVisibility(false, NoChangeOther);
             if (IsResultVisible) ChangeResultVisibility(false, NoChangeOther);
 
-            for (int i = 1; i <= numRowsCols; i++)
-                SetPossible(i, Globals.Possible);
+            for (int i = 0; i < numRowsCols; i++)
+                SetPossible(i + 1, Globals.Possible);
 
             // same for the result
             SetResultOriginal(Globals.Original);
@@ -180,12 +180,12 @@ namespace SudokuProject
             Result.Text = "";
             ShowDigits();
 
-            for (int i = 1; i <= numRowsCols; i++)
+            for (int i = 0; i < numRowsCols; i++)
             {
-                if (IsPossible(i))
+                if (IsPossible(i + 1))
                 {
-                    if (!GameForm.CheckAllowedResult(Row, Col, i.ToString(), Globals.Silent))
-                        SetPossible(i, Globals.Impossible);
+                    if (!GameForm.CheckAllowedResult(Row, Col, (i + 1).ToString(), Globals.Silent))
+                        SetPossible(i + 1, Globals.Impossible);
                 }
             }
         }
@@ -222,7 +222,8 @@ namespace SudokuProject
                 }
                 else
                 {
-                    // A VCL double-click delivers OnClick, OnDblClick, OnClick; Windows Forms only
+                    // In the Delphi control this was converted from, a double-click
+                    // delivers OnClick, OnDblClick, OnClick; Windows Forms only
                     // delivers Click, DoubleClick. The first Click toggled this digit's
                     // possible/impossible state, so replay the trailing Click to toggle it back
                     // and leave the digit's state unchanged, as it was in the Delphi program.
@@ -238,9 +239,9 @@ namespace SudokuProject
         {
             bool isWhite;
             if (numRowsCols == 9)
-                isWhite = (BoxNum % 2) == 1;
+                isWhite = (BoxNum % 2) == 0;
             else
-                isWhite = BoxNum == 1 || BoxNum == 4 || BoxNum == 5;   // bit weird in 6x6 puzzle!
+                isWhite = BoxNum == 0 || BoxNum == 3 || BoxNum == 4; // bit weird in 6x6 puzzle!
 
             Color newColor = isWhite ? Color.White : Color.Silver;
 
@@ -277,11 +278,11 @@ namespace SudokuProject
         {
             if (!Globals.ShowSmallDigits)
             {
-                digits[digit].Tag = possible ? 1 : 0;
+                digits[digit - 1].Tag = possible ? 1 : 0;
                 return;
             }
 
-            digits[digit].Font = possible ? DigitPossibleFont : DigitImpossibleFont;
+            digits[digit - 1].Font = possible ? DigitPossibleFont : DigitImpossibleFont;
         }
 
         // Set the result to be displayed, with the value key.
@@ -311,9 +312,9 @@ namespace SudokuProject
         public bool IsPossible(int digit)
         {
             if (Globals.ShowSmallDigits)
-                return digits[digit].Font.Bold;
+                return digits[digit - 1].Font.Bold;
 
-            return digits[digit].Tag is int tag && tag == 1;
+            return digits[digit - 1].Tag is 1;
         }
 
         // Return whether or not the displayed result value is an original puzzle value

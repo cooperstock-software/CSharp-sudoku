@@ -3,7 +3,7 @@ using System.IO;
 
 namespace SudokuProject
 {
-    /// <summary>The three solving strategies selectable on the Options form (Delphi: Methods).</summary>
+    /// <summary>The three solving strategies selectable on the Options form.</summary>
     internal enum SolveMethod
     {
         SimplePromptBacktrack = 1,
@@ -17,7 +17,7 @@ namespace SudokuProject
     /// </summary>
     internal static class Globals
     {
-        // Settings (Delphi: unit-level variables)
+        // Settings
         public static SolveMethod Method;          // selection from the methods above
         public static bool ShowSmallDigits;        // do we show the small digits, or not?
         public static bool DoSleeps;               // do we sleep after each solved (or proposed) digit?
@@ -43,7 +43,7 @@ namespace SudokuProject
         /// <summary>Read the values in from the ini file.</summary>
         public static void ReadIni()
         {
-            IniFile iniFile = new IniFile(FileName);
+            IniFile iniFile = new(FileName);
 
             Method = (SolveMethod)iniFile.ReadInteger("All", "Method", (int)SolveMethod.SimplePromptBacktrack);
             ShowSmallDigits = iniFile.ReadBool("All", "ShowSmallDigits", true);
@@ -56,18 +56,16 @@ namespace SudokuProject
         /// <summary>Write the current values back to the INI file.</summary>
         public static void WriteIni()
         {
-            IniFile iniFile = new IniFile(FileName);
-
-            iniFile.WriteInteger("All", "Method", (int)Method);
-            iniFile.WriteBool("All", "ShowSmallDigits", ShowSmallDigits);
-            iniFile.WriteBool("All", "DoSleeps", DoSleeps);
-            iniFile.WriteBool("All", "ReportDuration", ReportDuration);
-            iniFile.WriteBool("All", "ShowAttempts", ShowAttempts);
-            // iniFile.WriteBool("All", "Debug", DebugMode); // only set this manually
+            IniFile iniFile = new(FileName);
 
             try
             {
-                iniFile.Save();
+                iniFile.WriteInteger("All", "Method", (int)Method);
+                iniFile.WriteBool("All", "ShowSmallDigits", ShowSmallDigits);
+                iniFile.WriteBool("All", "DoSleeps", DoSleeps);
+                iniFile.WriteBool("All", "ReportDuration", ReportDuration);
+                iniFile.WriteBool("All", "ShowAttempts", ShowAttempts);
+                // iniFile.WriteBool("All", "Debug", DebugMode); // only set this manually
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {

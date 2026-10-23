@@ -61,9 +61,9 @@ namespace SudokuProject
             int i = 0;
             string s;
 
-            for (int row = 1; row <= numRowsCols; row++)
+            for (int row = 0; row < numRowsCols; row++)
             {
-                for (int col = 1; col <= numRowsCols; col++)
+                for (int col = 0; col < numRowsCols; col++)
                 {
                     board[i] = 0;
                     Cell cell = pCells[row, col];
@@ -84,9 +84,9 @@ namespace SudokuProject
         {
             int i = 0;
 
-            for (int row = 1; row <= numRowsCols; row++)
+            for (int row = 0; row < numRowsCols; row++)
             {
-                for (int col = 1; col <= numRowsCols; col++)
+                for (int col = 0; col < numRowsCols; col++)
                 {
                     Cell cell = pCells[row, col];
                     if (!cell.IsResultVisible)

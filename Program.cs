@@ -8,8 +8,8 @@ namespace SudokuProject
     /// </summary>
     internal static class Program
     {
-        // In Delphi these were the global form variables created by Application.CreateForm:
-        //   SudokuBaseForm, Sudoku6x6Form and OptionsForm.
+        // The three forms are created once and reused, so that the user can switch between them
+        // without losing their work.
         internal static SudokuBaseForm MainForm { get; private set; }
         internal static Sudoku6x6Form SixBySixForm { get; private set; }
         internal static OptionsForm OptionsDialog { get; private set; }
@@ -17,7 +17,7 @@ namespace SudokuProject
         [STAThread]
         private static void Main()
         {
-            // The Delphi layout is built from fixed pixel positions (the grid cells are placed
+            // The layout is built from fixed pixel positions (the grid cells are placed
             // at hard-coded coordinates), so run DPI-unaware to keep that layout exact on
             // high-DPI displays. Windows scales the whole window for us.
             // Change to HighDpiMode.SystemAware if you prefer crisp text and rework the layout.
@@ -25,12 +25,8 @@ namespace SudokuProject
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            // Delphi called ReadIni from each form's FormCreate; once at startup is equivalent.
             Globals.ReadIni();
 
-            // Application.CreateForm(TSudokuBaseForm, SudokuBaseForm);
-            // Application.CreateForm(TSudoku6x6Form, Sudoku6x6Form);
-            // Application.CreateForm(TOptionsForm, OptionsForm);
             MainForm = new SudokuBaseForm();
             SixBySixForm = new Sudoku6x6Form();
             OptionsDialog = new OptionsForm();
